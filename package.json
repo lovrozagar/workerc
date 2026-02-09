@@ -1,6 +1,6 @@
 {
   "name": "@scriptgun/workerc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Claude Code session management CLI — commands, hooks, and progress tracking",
   "type": "module",
   "bin": {
@@ -13,7 +13,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && cp -r src/templates dist/templates",
+    "build": "tsc && cp -r src/templates dist/templates && chmod +x dist/bin.js",
     "type:check": "tsc --noEmit"
   },
   "keywords": [
