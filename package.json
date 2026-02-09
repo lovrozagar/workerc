@@ -1,6 +1,6 @@
 {
   "name": "@scriptgun/workerc",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Claude Code session management CLI — commands, hooks, and progress tracking",
   "type": "module",
   "bin": {

@@ -15,13 +15,17 @@ echo "$FILE" | grep -qE '\.({{{EXTENSIONS}}})$' || exit 0
 echo "$FILE" | grep -qE '/\.claude/' && exit 0
 
 LINT_OUTPUT=$({{{LINT_COMMAND}}} "$FILE" 2>&1)
-if [ $? -ne 0 ]; then
-	jq -n --arg reason "Lint issues in $FILE:
+EXIT_CODE=$?
+
+# Success or file excluded from linter config
+if [ $EXIT_CODE -eq 0 ]; then
+	echo '{}'
+	exit 0
+fi
+echo "$LINT_OUTPUT" | grep -q "No files were processed" && { echo '{}'; exit 0; }
+
+jq -n --arg reason "Lint issues in $FILE:
 $LINT_OUTPUT
 
 FIX THESE BEFORE RESPONDING." '{"decision":"block","reason":$reason}'
-	exit 0
-fi
-
-echo '{}'
 exit 0

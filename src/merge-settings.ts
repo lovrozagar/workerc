@@ -3,7 +3,7 @@ import { dirname, join } from "node:path"
 
 /**
  * Identifies workerc-managed hooks by checking if the command path
- * contains ".claude/hooks/" and one of our known script names.
+ * contains one of our known script names.
  */
 const WORKERC_HOOK_NAMES = [
   "session-start-compact.sh",
@@ -26,7 +26,9 @@ interface Settings {
   hooks?: {
     SessionStart?: HookGroup[]
     PostToolUse?: HookGroup[]
+    [key: string]: HookGroup[] | undefined
   }
+  [key: string]: unknown
 }
 
 function isWorkercHook(hook: HookEntry): boolean {
@@ -37,16 +39,22 @@ function isWorkercGroup(group: HookGroup): boolean {
   return group.hooks.every(isWorkercHook)
 }
 
+export type SettingsTarget = "local" | "shared"
+
 export interface MergeOptions {
   projectDir: string
+  target: SettingsTarget
   enableLint: boolean
   lintHookFilename: string
   enableTypes: boolean
   typesHookFilename: string
 }
 
-export function mergeSettings(options: MergeOptions): void {
-  const settingsPath = join(options.projectDir, ".claude", "settings.local.json")
+export function mergeSettings(options: MergeOptions): string {
+  const filename = options.target === "shared"
+    ? "settings.json"
+    : "settings.local.json"
+  const settingsPath = join(options.projectDir, ".claude", filename)
   const settingsDir = dirname(settingsPath)
 
   if (!existsSync(settingsDir)) {
@@ -63,7 +71,7 @@ export function mergeSettings(options: MergeOptions): void {
     settings.hooks = {}
   }
 
-  /* SessionStart: remove old workerc hooks, add compact */
+  /* SessionStart: keep non-workerc hooks, append compact */
   const existingSessionStart = (settings.hooks.SessionStart ?? []).filter(
     (g) => !isWorkercGroup(g)
   )
@@ -79,7 +87,7 @@ export function mergeSettings(options: MergeOptions): void {
   }
   settings.hooks.SessionStart = [...existingSessionStart, compactHook]
 
-  /* PostToolUse: remove old workerc hooks, add new ones */
+  /* PostToolUse: keep non-workerc hooks, append workerc hooks */
   const existingPostToolUse = (settings.hooks.PostToolUse ?? []).filter(
     (g) => !isWorkercGroup(g)
   )
@@ -125,4 +133,5 @@ export function mergeSettings(options: MergeOptions): void {
   settings.hooks.PostToolUse = [...existingPostToolUse, ...newPostToolUse]
 
   writeFileSync(settingsPath, JSON.stringify(settings, null, "\t") + "\n")
+  return filename
 }

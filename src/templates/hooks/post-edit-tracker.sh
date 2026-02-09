@@ -22,9 +22,9 @@ echo "$FILE" | grep -qE '/\.claude/' && exit 0
 
 TRACKER_DIR="$(cd "$(dirname "$0")/../progress" 2>/dev/null && pwd)"
 
-# No progress dir = block
+# No progress dir = pass through
 if [ -z "$TRACKER_DIR" ] || [ ! -d "$TRACKER_DIR" ]; then
-	jq -n --arg reason "No .claude/progress/ directory found. Run /workerc:new to create one." '{"decision":"block","reason":$reason}'
+	echo '{}'
 	exit 0
 fi
 
@@ -109,13 +109,6 @@ if [ -n "$PENDING_TRACKER" ]; then
 	exit 0
 fi
 
-# Case 3: No tracker — block
-REASON="No progress file for this session. Run /workerc:new to set up."
-if [ -n "$UNCLAIMED" ]; then
-	REASON="$REASON
-Unclaimed trackers you could claim:$UNCLAIMED
-
-To claim: set line 2 to <!-- session: $SESSION_ID -->"
-fi
-jq -n --arg reason "$REASON" '{"decision":"block","reason":$reason}'
+# Case 3: No tracker — pass through
+echo '{}'
 exit 0

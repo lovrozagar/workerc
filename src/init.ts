@@ -1,12 +1,35 @@
 import * as p from "@clack/prompts"
 import { detect } from "./detect.js"
+import type { SettingsTarget } from "./merge-settings.js"
 import { mergeSettings } from "./merge-settings.js"
 import { writeFiles } from "./write-files.js"
 
 export async function init(projectDir: string): Promise<void> {
   p.intro("workerc init")
 
-  /* Step 1: Detect tools */
+  /* Step 1: Where to install settings */
+  const targetAnswer = await p.select({
+    message: "Where should hooks be configured?",
+    options: [
+      {
+        label: "Local (settings.local.json)",
+        value: "local" as const,
+        hint: "just for you, gitignored",
+      },
+      {
+        label: "Shared (settings.json)",
+        value: "shared" as const,
+        hint: "committed, shared with team",
+      },
+    ],
+  })
+  if (p.isCancel(targetAnswer)) {
+    p.cancel("Cancelled")
+    process.exit(0)
+  }
+  const target: SettingsTarget = targetAnswer
+
+  /* Step 2: Detect tools */
   const spinner = p.spinner()
   spinner.start("Detecting project tools")
   const detected = detect(projectDir)
@@ -22,7 +45,7 @@ export async function init(projectDir: string): Promise<void> {
     p.log.info("No linter or type checker detected")
   }
 
-  /* Step 2: Lint hook */
+  /* Step 3: Lint hook */
   let enableLint = false
   let lintCommand = ""
   let lintExtensions = ""
@@ -62,7 +85,7 @@ export async function init(projectDir: string): Promise<void> {
     }
   }
 
-  /* Step 3: Type check hook */
+  /* Step 4: Type check hook */
   let enableTypes = false
   let typeCommand = ""
   let typeExtensions = ""
@@ -102,7 +125,7 @@ export async function init(projectDir: string): Promise<void> {
     }
   }
 
-  /* Step 4: Build active hooks description for compact hook */
+  /* Step 5: Build active hooks description for compact hook */
   const hookDescriptions: string[] = []
   if (enableLint) {
     hookDescriptions.push(
@@ -119,7 +142,7 @@ export async function init(projectDir: string): Promise<void> {
   )
   const activeHooksDescription = hookDescriptions.join("\n")
 
-  /* Step 5: Write files */
+  /* Step 6: Write files */
   spinner.start("Writing files")
   const result = writeFiles({
     projectDir,
@@ -135,10 +158,11 @@ export async function init(projectDir: string): Promise<void> {
   })
   spinner.stop("Files written")
 
-  /* Step 6: Merge settings */
+  /* Step 7: Merge settings */
   spinner.start("Updating settings")
-  mergeSettings({
+  const settingsFile = mergeSettings({
     projectDir,
+    target,
     enableLint,
     lintHookFilename,
     enableTypes,
@@ -146,7 +170,7 @@ export async function init(projectDir: string): Promise<void> {
   })
   spinner.stop("Settings updated")
 
-  /* Step 7: Summary */
+  /* Step 8: Summary */
   p.log.success("workerc installed")
   p.log.message(
     [
@@ -157,7 +181,7 @@ export async function init(projectDir: string): Promise<void> {
       "Hooks:",
       ...result.hooks.map((f) => `  .claude/hooks/${f}`),
       "",
-      "Settings: .claude/settings.local.json",
+      `Settings: .claude/${settingsFile}`,
       "Progress: .claude/progress/",
       "",
       "Get started: run /workerc:new in Claude Code",
