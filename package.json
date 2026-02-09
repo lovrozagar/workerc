@@ -1,10 +1,10 @@
 {
   "name": "@scriptgun/workerc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Claude Code session management CLI — commands, hooks, and progress tracking",
   "type": "module",
   "bin": {
-    "workerc": "./dist/bin.js"
+    "workerc": "dist/bin.js"
   },
   "main": "./dist/init.js",
   "types": "./dist/init.d.ts",
@@ -27,7 +27,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lovrozagar/workerc"
+    "url": "git+https://github.com/lovrozagar/workerc.git"
   },
   "dependencies": {
     "@clack/prompts": "1.0.0"
