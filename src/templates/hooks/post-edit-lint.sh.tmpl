@@ -1,0 +1,27 @@
+#!/bin/bash
+# Post-edit hook: Lint check
+# Always exit 0, use JSON {"decision":"block","reason":"..."} to report errors
+
+INPUT=$(cat)
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+
+[ -z "$FILE" ] && exit 0
+[ ! -f "$FILE" ] && exit 0
+
+# Only check files the linter cares about
+echo "$FILE" | grep -qE '\.({{{EXTENSIONS}}})$' || exit 0
+
+# Skip .claude directory entirely
+echo "$FILE" | grep -qE '/\.claude/' && exit 0
+
+LINT_OUTPUT=$({{{LINT_COMMAND}}} "$FILE" 2>&1)
+if [ $? -ne 0 ]; then
+	jq -n --arg reason "Lint issues in $FILE:
+$LINT_OUTPUT
+
+FIX THESE BEFORE RESPONDING." '{"decision":"block","reason":$reason}'
+	exit 0
+fi
+
+echo '{}'
+exit 0

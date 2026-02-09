@@ -1,0 +1,37 @@
+{
+  "name": "workerc",
+  "version": "0.1.0",
+  "description": "Claude Code session management CLI — commands, hooks, and progress tracking",
+  "type": "module",
+  "bin": {
+    "workerc": "./dist/bin.js"
+  },
+  "main": "./dist/init.js",
+  "types": "./dist/init.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && cp -r src/templates dist/templates",
+    "type:check": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "session",
+    "hooks",
+    "cli",
+    "workerc"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/workerc/workerc"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
